@@ -3,203 +3,543 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PastelPulse — Routine & Correlation Tracker</title>
+  <title>PastelPulse — Habits, SAT Study & AP Stats Lab</title>
   
-  <!-- Favicon / Home Screen Icon Support -->
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
   <meta name="theme-color" content="#FFFBF7">
 
-  <!-- 1. Tailwind CSS (Styling Engine) -->
+  <!-- Tailwind CSS Engine -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            brand: {
-              cream: '#FFFBF7',
-              sand: '#F7EFE5',
-              lavender: '#E6E6FA',
-              rose: '#FAD2E1',
-              mint: '#D8F3DC',
-              peach: '#FFE5D9',
-              amber: '#FDE2E4',
-              sky: '#D0F4DE'
+            midnight: {
+              950: '#070C18',
+              900: '#0F172A',
+              850: '#151F32',
+              800: '#1E293B',
+              700: '#334155'
             }
           }
         }
       }
-    }
+    };
   </script>
 
-  <!-- 2. React, ReactDOM & Babel (allows running React directly in HTML) -->
+  <!-- React 18 & Babel standalone -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
     body {
-      background-color: #FFFBF7;
-      color: #3B3836;
       -webkit-font-smoothing: antialiased;
       user-select: none;
-    }
-    input[type=range] {
-      accent-color: #F472B6;
     }
     .custom-scrollbar::-webkit-scrollbar {
       height: 4px;
       width: 4px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #E5E7EB;
+      background: #CBD5E1;
       border-radius: 9999px;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+    input[type=range] {
+      accent-color: #F48FB1;
+    }
+    select {
+      color-scheme: light;
+    }
+    .dark select {
+      color-scheme: dark;
+      background-color: #1E293B !important;
+      color: #F8FAFC !important;
+    }
+    .dark select option {
+      background-color: #1E293B !important;
+      color: #F8FAFC !important;
     }
   </style>
 </head>
-<body class="bg-[#FFFBF7] min-h-screen">
+<body class="bg-[#FFFBF7] dark:bg-[#070C18] text-[#332E38] dark:text-[#E2E8F0] min-h-screen transition-colors duration-200">
   <div id="root"></div>
 
-  <!-- Main Application Code (Executed via Babel) -->
   <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
+    const { useState, useEffect, useMemo, useRef } = React;
 
-    // --- Inline Pastel Icon Components (Zero dependency) ---
     const Icon = ({ name, className = "w-5 h-5", color = "currentColor" }) => {
       const icons = {
         pulse: (
-          <svg className={className} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
           </svg>
         ),
         calculator: (
-          <svg className={className} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
             <rect x="4" y="2" width="16" height="20" rx="2"></rect>
             <line x1="8" y1="6" x2="16" y2="6"></line>
             <line x1="16" y1="14" x2="16" y2="18"></line>
             <path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"></path>
           </svg>
         ),
+        graduation: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+          </svg>
+        ),
+        checkSquare: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        ),
         plus: (
-          <svg className={className} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
         ),
         download: (
-          <svg className={className} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
         ),
+        upload: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        ),
         edit: (
-          <svg className={className} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
         ),
-        calendar: (
-          <svg className={className} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
+        sliders: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
         ),
-        sparkles: (
-          <svg className={className} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+        bell: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        ),
+        info: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        ),
+        moon: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        ),
+        sun: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
           </svg>
         ),
         trash: (
-          <svg className={className} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
             <polyline points="3 6 5 6 21 6"></polyline>
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        ),
+        rotateCcw: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        ),
+        history: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <polyline points="12 7 12 12 15 15"></polyline>
+          </svg>
+        ),
+        check: (
+          <svg className={className} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         )
       };
       return icons[name] || null;
     };
 
-    // --- Initial Starter Data ---
+    const STATS_GLOSSARY = {
+      pearson: {
+        title: "Pearson Correlation Coefficient (r)",
+        simple: "Measures the strength and direction of a linear relationship between two habits on a scale of -1 to +1.",
+        apTip: "Always mention direction (positive/negative), form (linear), strength (weak/moderate/strong), and context! r has no units."
+      },
+      lsrl: {
+        title: "Least-Squares Regression Line (ŷ = a + bx)",
+        simple: "The mathematical 'line of best fit' that minimizes the sum of squared vertical residuals (errors).",
+        apTip: "Exam template: 'For each additional 1-unit increase in [X], predicted [Y] increases/decreases by [b] [units]'."
+      },
+      r2: {
+        title: "Coefficient of Determination (R²)",
+        simple: "The percentage of variation in your response habit (e.g. Mood) that is explained by your explanatory habit (e.g. Screen Time).",
+        apTip: "Standard FRQ phrasing: 'Approximately [R²]% of the variability in [Y] is accounted for by the linear model with [X]'."
+      },
+      iqr: {
+        title: "Interquartile Range & 1.5 × IQR Outlier Rule",
+        simple: "IQR = Q₃ - Q₁ (middle 50% of your data). Outliers are points that fall below Q₁ - 1.5×IQR or above Q₃ + 1.5×IQR.",
+        apTip: "IQR and Median are 'resistant' to extreme outliers, while Mean and Standard Deviation are sensitive and get pulled toward the skew."
+      },
+      zScore: {
+        title: "Standardized Z-Score: z = (x - μ) / σ",
+        simple: "Tells you how many standard deviations a specific day's value was above (+) or below (-) your overall average.",
+        apTip: "A z-score allows you to compare apples to oranges (e.g. was your 95-minute Khan study day more unusual than your 9-hour sleep day?)."
+      },
+      ci: {
+        title: "95% Confidence Interval for the Mean",
+        simple: "An estimated range of plausible values for your true long-term average habit, taking natural daily variation into account.",
+        apTip: "Template: 'We are 95% confident that the true population mean for [Metric] lies between [Lower] and [Upper] [Units]'."
+      }
+    };
+
     const INITIAL_METRICS = [
-      { id: 'screenTime', name: 'Screen Time', unit: 'hrs', min: 0, max: 12, step: 0.1, color: '#F472B6', bg: '#FCE7F3', emoji: '📱', targetOp: '<', targetVal: 3.0 },
-      { id: 'khanStudy', name: 'Khan Academy', unit: 'min', min: 0, max: 180, step: 5, color: '#34D399', bg: '#D1FAE5', emoji: '📚', targetOp: '>', targetVal: 45 },
-      { id: 'sleep', name: 'Sleep', unit: 'hrs', min: 0, max: 12, step: 0.5, color: '#A78BFA', bg: '#EDE9FE', emoji: '🌙', targetOp: '>', targetVal: 7.5 },
-      { id: 'mood', name: 'Mood', unit: '/10', min: 1, max: 10, step: 1, color: '#FBBF24', bg: '#FEF3C7', emoji: '✨', targetOp: '>', targetVal: 7 }
+      { id: 'satStudy', name: 'SAT Study', unit: 'min', min: 0, max: 240, step: 10, color: '#818CF8', bg: '#EDE7F6', darkBg: '#21244D', emoji: '🎯', targetOp: '>', targetVal: 60 },
+      { id: 'khanStudy', name: 'Khan Academy', unit: 'min', min: 0, max: 180, step: 5, color: '#34D399', bg: '#E0F2F1', darkBg: '#133533', emoji: '📚', targetOp: '>', targetVal: 45 },
+      { id: 'screenTime', name: 'Screen Time', unit: 'hrs', min: 0, max: 12, step: 0.1, color: '#F472B6', bg: '#FCE7F3', darkBg: '#371B28', emoji: '📱', targetOp: '<', targetVal: 3.0 },
+      { id: 'sleep', name: 'Sleep', unit: 'hrs', min: 0, max: 12, step: 0.5, color: '#A78BFA', bg: '#F3E5F5', darkBg: '#2A1F3D', emoji: '🌙', targetOp: '>', targetVal: 7.5 },
+      { id: 'mood', name: 'Mood', unit: '/10', min: 1, max: 10, step: 1, color: '#FBBF24', bg: '#FFF8E1', darkBg: '#3B331A', emoji: '✨', targetOp: '>', targetVal: 7 }
     ];
 
     const INITIAL_DAYS = [
-      { date: '2026-09-14', dayName: 'Mon', screenTime: 4.5, khanStudy: 30, sleep: 6.5, mood: 5, note: 'Tired morning' },
-      { date: '2026-09-15', dayName: 'Tue', screenTime: 3.8, khanStudy: 45, sleep: 7.0, mood: 6, note: 'Decent focus' },
-      { date: '2026-09-16', dayName: 'Wed', screenTime: 1.2, khanStudy: 85, sleep: 8.5, mood: 9, note: 'Wednesday detox streak!' },
-      { date: '2026-09-17', dayName: 'Thu', screenTime: 3.1, khanStudy: 50, sleep: 7.5, mood: 7, note: 'Good math review' },
-      { date: '2026-09-18', dayName: 'Fri', screenTime: 5.2, khanStudy: 20, sleep: 6.0, mood: 4, note: 'Late night browsing' },
-      { date: '2026-09-19', dayName: 'Sat', screenTime: 4.0, khanStudy: 60, sleep: 8.0, mood: 7, note: 'Relaxed day' },
-      { date: '2026-09-20', dayName: 'Sun', screenTime: 3.6, khanStudy: 40, sleep: 7.5, mood: 6, note: 'Prepared for the week' },
-      { date: '2026-09-21', dayName: 'Mon', screenTime: 4.2, khanStudy: 35, sleep: 6.8, mood: 5, note: 'Busy day' },
-      { date: '2026-09-22', dayName: 'Tue', screenTime: 3.5, khanStudy: 55, sleep: 7.2, mood: 7, note: 'Solid routine' },
-      { date: '2026-09-23', dayName: 'Wed', screenTime: 0.9, khanStudy: 95, sleep: 9.0, mood: 10, note: 'Super Wednesday flow!' },
-      { date: '2026-09-24', dayName: 'Thu', screenTime: 2.8, khanStudy: 60, sleep: 7.8, mood: 8, note: 'Feeling sharp' },
-      { date: '2026-09-25', dayName: 'Fri', screenTime: 5.0, khanStudy: 15, sleep: 6.2, mood: 4, note: 'Doomscrolled before bed' },
-      { date: '2026-09-26', dayName: 'Sat', screenTime: 3.2, khanStudy: 70, sleep: 8.2, mood: 8, note: 'Khan Academy mastery test' }
+      { id: 'd1', isDemo: true, date: '2026-09-07', dayName: 'Mon', satStudy: 45, khanStudy: 30, screenTime: 4.8, sleep: 6.8, mood: 5, note: 'SAT Math practice set' },
+      { id: 'd2', isDemo: true, date: '2026-09-08', dayName: 'Tue', satStudy: 60, khanStudy: 40, screenTime: 3.9, sleep: 7.0, mood: 6, note: 'Reading passages' },
+      { id: 'd3', isDemo: true, date: '2026-09-09', dayName: 'Wed', satStudy: 90, khanStudy: 75, screenTime: 1.4, sleep: 8.5, mood: 9, note: 'Wednesday detox streak!' },
+      { id: 'd4', isDemo: true, date: '2026-09-10', dayName: 'Thu', satStudy: 50, khanStudy: 45, screenTime: 3.2, sleep: 7.4, mood: 7, note: 'Reviewed missed grammar' },
+      { id: 'd5', isDemo: true, date: '2026-09-11', dayName: 'Fri', satStudy: 30, khanStudy: 20, screenTime: 5.5, sleep: 6.2, mood: 5, note: 'Late night browsing' },
+      { id: 'd6', isDemo: true, date: '2026-09-12', dayName: 'Sat', satStudy: 80, khanStudy: 60, screenTime: 4.0, sleep: 8.0, mood: 7, note: 'Weekend timed section' },
+      { id: 'd7', isDemo: true, date: '2026-09-13', dayName: 'Sun', satStudy: 40, khanStudy: 35, screenTime: 3.8, sleep: 7.5, mood: 6, note: 'Weekly prep plan' },
+      { id: 'd8', isDemo: true, date: '2026-09-14', dayName: 'Mon', satStudy: 55, khanStudy: 30, screenTime: 4.5, sleep: 6.5, mood: 5, note: 'Tired morning' },
+      { id: 'd9', isDemo: true, date: '2026-09-15', dayName: 'Tue', satStudy: 70, khanStudy: 45, screenTime: 3.8, sleep: 7.0, mood: 6, note: 'Khan Academy algebra drill' },
+      { id: 'd10', isDemo: true, date: '2026-09-16', dayName: 'Wed', satStudy: 105, khanStudy: 85, screenTime: 1.1, sleep: 8.6, mood: 9, note: 'Detox Wednesday round 2!' },
+      { id: 'd11', isDemo: true, date: '2026-09-17', dayName: 'Thu', satStudy: 65, khanStudy: 50, screenTime: 3.1, sleep: 7.5, mood: 7, note: 'Good math review' },
+      { id: 'd12', isDemo: true, date: '2026-09-18', dayName: 'Fri', satStudy: 30, khanStudy: 20, screenTime: 5.2, sleep: 6.0, mood: 4, note: 'Sleep deficit' },
+      { id: 'd13', isDemo: true, date: '2026-09-19', dayName: 'Sat', satStudy: 90, khanStudy: 65, screenTime: 4.0, sleep: 8.0, mood: 7, note: 'Practice test session' },
+      { id: 'd14', isDemo: true, date: '2026-09-20', dayName: 'Sun', satStudy: 50, khanStudy: 40, screenTime: 3.6, sleep: 7.5, mood: 6, note: 'Sunday wrap-up' },
+      { id: 'd15', isDemo: true, date: '2026-09-21', dayName: 'Mon', satStudy: 60, khanStudy: 35, screenTime: 4.2, sleep: 6.8, mood: 5, note: 'Vocabulary drill' },
+      { id: 'd16', isDemo: true, date: '2026-09-22', dayName: 'Tue', satStudy: 75, khanStudy: 55, screenTime: 3.5, sleep: 7.2, mood: 7, note: 'Solid routine' },
+      { id: 'd17', isDemo: true, date: '2026-09-23', dayName: 'Wed', satStudy: 120, khanStudy: 95, screenTime: 0.9, sleep: 9.0, mood: 10, note: 'Peak Wednesday flow!' },
+      { id: 'd18', isDemo: true, date: '2026-09-24', dayName: 'Thu', satStudy: 70, khanStudy: 60, screenTime: 2.8, sleep: 7.8, mood: 8, note: 'Feeling sharp' },
+      { id: 'd19', isDemo: true, date: '2026-09-25', dayName: 'Fri', satStudy: 40, khanStudy: 15, screenTime: 5.0, sleep: 6.2, mood: 4, note: 'Doomscrolled before bed' },
+      { id: 'd20', isDemo: true, date: '2026-09-26', dayName: 'Sat', satStudy: 85, khanStudy: 70, screenTime: 3.2, sleep: 8.2, mood: 8, note: 'Target reached' }
+    ];
+
+    const PRESET_PASTEL_COLORS = [
+      { name: 'Indigo', color: '#818CF8', bg: '#EDE7F6', darkBg: '#21244D' },
+      { name: 'Rose', color: '#F472B6', bg: '#FCE7F3', darkBg: '#371B28' },
+      { name: 'Mint', color: '#34D399', bg: '#E0F2F1', darkBg: '#133533' },
+      { name: 'Lavender', color: '#A78BFA', bg: '#F3E5F5', darkBg: '#2A1F3D' },
+      { name: 'Amber', color: '#FBBF24', bg: '#FFF8E1', darkBg: '#3B331A' },
+      { name: 'Sky', color: '#38BDF8', bg: '#E0F7FA', darkBg: '#102A38' },
+      { name: 'Peach', color: '#FB923C', bg: '#FFEDE0', darkBg: '#3A1E14' }
     ];
 
     function App() {
-      // Persistent States
+      const [darkMode, setDarkMode] = useState(() => {
+        return localStorage.getItem('pastel_dark_mode_v6') === 'true';
+      });
+
+      useEffect(() => {
+        localStorage.setItem('pastel_dark_mode_v6', darkMode);
+        if (darkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [darkMode]);
+
       const [metrics, setMetrics] = useState(() => {
-        const saved = localStorage.getItem('pastel_metrics');
-        return saved ? JSON.parse(saved) : INITIAL_METRICS;
+        try {
+          const saved = localStorage.getItem('pastel_metrics_v6');
+          return saved ? JSON.parse(saved) : INITIAL_METRICS;
+        } catch {
+          return INITIAL_METRICS;
+        }
       });
 
       const [entries, setEntries] = useState(() => {
-        const saved = localStorage.getItem('pastel_entries');
-        return saved ? JSON.parse(saved) : INITIAL_DAYS;
+        try {
+          const saved = localStorage.getItem('pastel_entries_v6');
+          return saved ? JSON.parse(saved) : INITIAL_DAYS;
+        } catch {
+          return INITIAL_DAYS;
+        }
       });
 
+      // Recycle bin for recently deleted days
+      const [recentlyDeleted, setRecentlyDeleted] = useState(() => {
+        try {
+          const saved = localStorage.getItem('pastel_recently_deleted_v6');
+          return saved ? JSON.parse(saved) : [];
+        } catch {
+          return [];
+        }
+      });
+
+      const [todos, setTodos] = useState(() => {
+        try {
+          const saved = localStorage.getItem('pastel_todos_v6');
+          return saved ? JSON.parse(saved) : [
+            { id: 't1', text: 'Complete 30 min of SAT Math module drills', done: true },
+            { id: 't2', text: 'Khan Academy calculus limit exercises', done: false },
+            { id: 't3', text: 'Wind down by 10:30 PM for 8h sleep', done: false }
+          ];
+        } catch {
+          return [];
+        }
+      });
+
+      // Synchronize state with LocalStorage
       useEffect(() => {
-        localStorage.setItem('pastel_metrics', JSON.stringify(metrics));
+        try { localStorage.setItem('pastel_metrics_v6', JSON.stringify(metrics)); } catch(e){}
       }, [metrics]);
 
       useEffect(() => {
-        localStorage.setItem('pastel_entries', JSON.stringify(entries));
+        try { localStorage.setItem('pastel_entries_v6', JSON.stringify(entries)); } catch(e){}
       }, [entries]);
 
-      const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'regression', 'log', 'history'
+      useEffect(() => {
+        try { localStorage.setItem('pastel_recently_deleted_v6', JSON.stringify(recentlyDeleted)); } catch(e){}
+      }, [recentlyDeleted]);
+
+      useEffect(() => {
+        try { localStorage.setItem('pastel_todos_v6', JSON.stringify(todos)); } catch(e){}
+      }, [todos]);
+
+      const [activeTab, setActiveTab] = useState('dashboard');
       const [normalizedMode, setNormalizedMode] = useState(true);
-      const [showTrendlines, setShowTrendlines] = useState(false);
-      
-      // Target Edit Modal State
+      const [showTrendlines, setShowTrendlines] = useState(true); // Toggle for LSRL trendlines
+
+      // Multi-select entries in history
+      const [selectedEntryIds, setSelectedEntryIds] = useState([]);
+
+      // Metric filter toggles
+      const [visibleMetrics, setVisibleMetrics] = useState(() => {
+        const initial = {};
+        INITIAL_METRICS.forEach(m => { initial[m.id] = true; });
+        return initial;
+      });
+
+      // Interactive hover index
+      const [hoveredDayIndex, setHoveredDayIndex] = useState(null);
+
+      // Modals
+      const [activeTooltip, setActiveTooltip] = useState(null);
       const [editingTargetMetric, setEditingTargetMetric] = useState(null);
       const [tempTargetVal, setTempTargetVal] = useState(0);
-
-      // New Metric Creation Modal
+      const [editingBoundsMetric, setEditingBoundsMetric] = useState(null);
       const [isAddingMetric, setIsAddingMetric] = useState(false);
-      const [newMetricData, setNewMetricData] = useState({
-        name: '', unit: '', emoji: '✨', min: 0, max: 10, step: 1, color: '#F472B6', targetOp: '>', targetVal: 5
+      const [editingEntry, setEditingEntry] = useState(null);
+      const [showNotifications, setShowNotifications] = useState(false);
+      const [showUndoBanner, setShowUndoBanner] = useState(false);
+
+      // New Metric Creation State
+      const [newMetricName, setNewMetricName] = useState('');
+      const [newMetricEmoji, setNewMetricEmoji] = useState('💡');
+      const [newMetricUnit, setNewMetricUnit] = useState('pts');
+      const [newMetricMin, setNewMetricMin] = useState(0);
+      const [newMetricMax, setNewMetricMax] = useState(10);
+      const [newMetricStep, setNewMetricStep] = useState(1);
+      const [newMetricTargetOp, setNewMetricTargetOp] = useState('>');
+      const [newMetricTargetVal, setNewMetricTargetVal] = useState(5);
+      const [newMetricColorObj, setNewMetricColorObj] = useState(PRESET_PASTEL_COLORS[0]);
+
+      // Quick Logger form state
+      const [formData, setFormData] = useState(() => {
+        const initialForm = {
+          date: new Date().toISOString().split('T')[0],
+          note: ''
+        };
+        INITIAL_METRICS.forEach(m => {
+          initialForm[m.id] = m.targetVal || m.min;
+        });
+        return initialForm;
       });
 
-      // Quick Logger Form State
-      const [formData, setFormData] = useState({
-        date: new Date().toISOString().split('T')[0],
-        note: ''
-      });
-
-      // Regression State
-      const [regX, setRegX] = useState('screenTime');
+      // Regression & AP Stats state
+      const [regX, setRegX] = useState('satStudy');
       const [regY, setRegY] = useState('mood');
-      const [predictionX, setPredictionX] = useState(2.0);
+      const [predictionX, setPredictionX] = useState(60);
+      const [apMetric, setApMetric] = useState('satStudy');
 
-      // Calculate Day of Week
+      const [newTodoText, setNewTodoText] = useState('');
+      const fileInputRef = useRef(null);
+
+      // Check if any demo data still exists
+      const hasDemoData = useMemo(() => {
+        return entries.some(e => e.isDemo);
+      }, [entries]);
+
       const getDayName = (dateStr) => {
+        if (!dateStr) return 'Day';
         const parts = dateStr.split('-');
         const d = new Date(parts[0], parts[1] - 1, parts[2]);
-        return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+        return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] || 'Day';
       };
 
-      // Math Helpers: Pearson Correlation & OLS Linear Regression
+      // Keep form and visible filters updated when metrics change
+      useEffect(() => {
+        setFormData(prev => {
+          const next = { ...prev };
+          metrics.forEach(m => {
+            if (next[m.id] === undefined) next[m.id] = m.targetVal || m.min;
+          });
+          return next;
+        });
+        setVisibleMetrics(prev => {
+          const next = { ...prev };
+          metrics.forEach(m => {
+            if (next[m.id] === undefined) next[m.id] = true;
+          });
+          return next;
+        });
+      }, [metrics]);
+
+      const handleSaveEntry = (e) => {
+        e.preventDefault();
+        const dayName = getDayName(formData.date);
+        const entryId = 'd_' + formData.date.replace(/-/g, '_') + '_' + Date.now().toString().slice(-4);
+
+        const newEntry = {
+          id: entryId,
+          isDemo: false,
+          date: formData.date,
+          dayName,
+          note: (formData.note || '').trim()
+        };
+
+        metrics.forEach(m => {
+          newEntry[m.id] = formData[m.id] !== undefined ? Number(formData[m.id]) : m.min;
+        });
+
+        setEntries(prev => {
+          const existingIdx = prev.findIndex(item => item.date === formData.date);
+          let updated;
+          if (existingIdx >= 0) {
+            updated = [...prev];
+            updated[existingIdx] = { ...newEntry, id: prev[existingIdx].id || entryId };
+          } else {
+            updated = [...prev, newEntry];
+          }
+          return updated.sort((a, b) => new Date(a.date) - new Date(b.date));
+        });
+
+        setFormData(prev => ({ ...prev, note: '' }));
+        setActiveTab('dashboard');
+      };
+
+      // Single entry deletion with recycle bin
+      const handleDeleteSingleEntry = (idToDelete) => {
+        const deletedItem = entries.find(e => e.id === idToDelete);
+        if (!deletedItem) return;
+
+        setRecentlyDeleted(prev => [deletedItem, ...prev]);
+        setEntries(prev => prev.filter(e => e.id !== idToDelete));
+        setSelectedEntryIds(prev => prev.filter(x => x !== idToDelete));
+        setShowUndoBanner(true);
+      };
+
+      // Multi-select batch deletion with recycle bin
+      const handleDeleteSelectedEntries = () => {
+        if (!selectedEntryIds.length) return;
+        const deletedItems = entries.filter(e => selectedEntryIds.includes(e.id));
+        setRecentlyDeleted(prev => [...deletedItems, ...prev]);
+        setEntries(prev => prev.filter(e => !selectedEntryIds.includes(e.id)));
+        setSelectedEntryIds([]);
+        setShowUndoBanner(true);
+      };
+
+      // Restore recently deleted items
+      const handleRestoreDeleted = () => {
+        if (!recentlyDeleted.length) return;
+        setEntries(prev => {
+          const combined = [...prev, ...recentlyDeleted];
+          // Deduplicate by ID
+          const map = new Map();
+          combined.forEach(item => map.set(item.id, item));
+          return Array.from(map.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
+        });
+        setRecentlyDeleted([]);
+        setShowUndoBanner(false);
+      };
+
+      // Clear only the starter demo data
+      const handleClearStarterDemoData = () => {
+        const demoItems = entries.filter(e => e.isDemo);
+        setRecentlyDeleted(prev => [...demoItems, ...prev]);
+        setEntries(prev => prev.filter(e => !e.isDemo));
+        setSelectedEntryIds([]);
+        setShowUndoBanner(true);
+      };
+
+      // Create new metric
+      const handleCreateCustomMetric = (e) => {
+        e.preventDefault();
+        if (!newMetricName.trim()) return;
+
+        const id = 'm_' + newMetricName.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString().slice(-4);
+        const newMetric = {
+          id,
+          name: newMetricName.trim(),
+          emoji: newMetricEmoji || '✨',
+          unit: newMetricUnit.trim() || 'pts',
+          min: Number(newMetricMin) || 0,
+          max: Number(newMetricMax) || 10,
+          step: Number(newMetricStep) || 1,
+          color: newMetricColorObj.color,
+          bg: newMetricColorObj.bg,
+          darkBg: newMetricColorObj.darkBg,
+          targetOp: newMetricTargetOp,
+          targetVal: Number(newMetricTargetVal) || 1
+        };
+
+        setMetrics(prev => [...prev, newMetric]);
+        setIsAddingMetric(false);
+
+        // Reset inputs
+        setNewMetricName('');
+        setNewMetricUnit('pts');
+      };
+
       const computeRegression = (xKey, yKey) => {
         const pairs = entries
           .filter(e => e[xKey] !== undefined && e[yKey] !== undefined)
@@ -227,117 +567,138 @@
         const intercept = meanY - slope * meanX;
         const r2 = r * r;
 
-        // Standard Error
-        const residuals = pairs.map(p => p.y - (slope * p.x + intercept));
-        const sse = residuals.reduce((acc, res) => acc + res * res, 0);
-        const se = n > 2 ? Math.sqrt(sse / (n - 2)) : 0;
-
-        return { slope, intercept, r, r2, se, pairs, meanX, meanY };
+        return { slope, intercept, r, r2, pairs, meanX, meanY, n };
       };
 
       const regStats = useMemo(() => computeRegression(regX, regY), [entries, regX, regY]);
 
-      // Wednesday Pattern Finder
-      const wednesdayStat = useMemo(() => {
-        const weds = entries.filter(e => e.dayName === 'Wed');
-        const others = entries.filter(e => e.dayName !== 'Wed');
-        if (!weds.length || !others.length) return null;
+      // Calculate time-series linear trendlines for each metric across logged days (t = 0 to N-1)
+      const timelineTrendlines = useMemo(() => {
+        const result = {};
+        const n = entries.length;
+        if (n < 2) return result;
 
-        const avgScreenWed = weds.reduce((acc, d) => acc + (d.screenTime || 0), 0) / weds.length;
-        const avgScreenOthers = others.reduce((acc, d) => acc + (d.screenTime || 0), 0) / others.length;
-        const avgKhanWed = weds.reduce((acc, d) => acc + (d.khanStudy || 0), 0) / weds.length;
-        const avgKhanOthers = others.reduce((acc, d) => acc + (d.khanStudy || 0), 0) / others.length;
-
-        return {
-          avgScreenWed: avgScreenWed.toFixed(1),
-          avgScreenOthers: avgScreenOthers.toFixed(1),
-          avgKhanWed: Math.round(avgKhanWed),
-          avgKhanOthers: Math.round(avgKhanOthers),
-          diffPercent: Math.round(((avgScreenOthers - avgScreenWed) / avgScreenOthers) * 100)
-        };
-      }, [entries]);
-
-      // Handle Adding an Entry
-      const handleSaveEntry = (e) => {
-        e.preventDefault();
-        const dayName = getDayName(formData.date);
-        const newEntry = { ...formData, dayName };
-        
-        // Convert metric strings to numbers
         metrics.forEach(m => {
-          if (newEntry[m.id] !== undefined) {
-            newEntry[m.id] = Number(newEntry[m.id]);
-          } else {
-            newEntry[m.id] = m.min;
+          let sumT = 0, sumY = 0, sumTY = 0, sumT2 = 0;
+          entries.forEach((e, t) => {
+            const y = Number(e[m.id]) || 0;
+            sumT += t;
+            sumY += y;
+            sumTY += t * y;
+            sumT2 += t * t;
+          });
+          const denom = (n * sumT2 - sumT * sumT);
+          if (denom !== 0) {
+            const slope = (n * sumTY - sumT * sumY) / denom;
+            const intercept = (sumY - slope * sumT) / n;
+            result[m.id] = { slope, intercept };
           }
         });
+        return result;
+      }, [entries, metrics]);
 
-        const existsIndex = entries.findIndex(item => item.date === formData.date);
-        if (existsIndex >= 0) {
-          const updated = [...entries];
-          updated[existsIndex] = newEntry;
-          setEntries(updated.sort((a,b) => new Date(a.date) - new Date(b.date)));
-        } else {
-          setEntries([...entries, newEntry].sort((a,b) => new Date(a.date) - new Date(b.date)));
-        }
+      const apStatsData = useMemo(() => {
+        const values = entries
+          .map(e => Number(e[apMetric]))
+          .filter(v => !isNaN(v))
+          .sort((a, b) => a - b);
 
-        alert('✨ Entry saved successfully!');
-        setActiveTab('dashboard');
-      };
+        const n = values.length;
+        if (n < 2) return null;
 
-      // Export to CSV Function
-      const exportCSV = () => {
-        const headers = ['date', 'dayName', ...metrics.map(m => m.id), 'note'];
-        const csvRows = [headers.join(',')];
+        const sum = values.reduce((a, b) => a + b, 0);
+        const mean = sum / n;
+        const variance = n > 1 ? values.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / (n - 1) : 0;
+        const s = Math.sqrt(variance);
 
-        entries.forEach(row => {
-          const values = headers.map(header => {
-            const val = row[header] !== undefined ? row[header] : '';
-            return `"${String(val).replace(/"/g, '""')}"`;
-          });
-          csvRows.push(values.join(','));
-        });
+        const min = values[0];
+        const max = values[n - 1];
 
-        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('download', `PastelPulse_Data_${new Date().toISOString().split('T')[0]}.csv`);
-        a.click();
-      };
+        const getPercentile = (p) => {
+          const index = (values.length - 1) * p;
+          const lower = Math.floor(index);
+          const upper = Math.ceil(index);
+          const weight = index % 1;
+          if (lower === upper) return values[index];
+          return values[lower] * (1 - weight) + values[upper] * weight;
+        };
+
+        const q1 = getPercentile(0.25);
+        const median = getPercentile(0.50);
+        const q3 = getPercentile(0.75);
+        const iqr = q3 - q1;
+
+        const lowerFence = q1 - 1.5 * iqr;
+        const upperFence = q3 + 1.5 * iqr;
+        const outliers = values.filter(v => v < lowerFence || v > upperFence);
+
+        const tStar = 2.18;
+        const marginOfError = n > 1 ? tStar * (s / Math.sqrt(n)) : 0;
+        const ciLower = mean - marginOfError;
+        const ciUpper = mean + marginOfError;
+
+        return { n, values, mean, s, min, q1, median, q3, max, iqr, lowerFence, upperFence, outliers, ciLower, ciUpper };
+      }, [entries, apMetric]);
 
       return (
-        <div className="max-w-2xl mx-auto px-4 py-8 pb-28 font-sans">
+        <div className="max-w-2xl mx-auto px-4 py-8 pb-32 font-sans transition-colors duration-200">
+          
           {/* Header */}
           <header className="flex justify-between items-center mb-6">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-2xl">🌸</span>
+                <span className="text-2xl animate-pulse">🌸</span>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-rose-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
                   PastelPulse
                 </h1>
               </div>
-              <p className="text-xs text-stone-500 font-medium">Daily correlation & routine sandbox</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-medium">Routine correlation, SAT prep & AP Stats lab</p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <button 
-                onClick={exportCSV} 
-                title="Backup data to CSV spreadsheet"
-                className="p-2.5 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 transition shadow-sm active:scale-95"
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2.5 rounded-full bg-stone-100 dark:bg-midnight-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-midnight-700 transition active:scale-95 shadow-sm"
+                title="Toggle Theme"
               >
-                <Icon name="download" className="w-4 h-4" />
+                <Icon name={darkMode ? "sun" : "moon"} className="w-4 h-4" />
               </button>
+
               <button 
                 onClick={() => setIsAddingMetric(true)}
-                className="flex items-center gap-1 text-xs px-3.5 py-2 rounded-full bg-pink-100 text-pink-700 hover:bg-pink-200 font-semibold shadow-sm transition active:scale-95"
+                className="flex items-center gap-1 text-xs px-3.5 py-2 rounded-full bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300 hover:bg-pink-200 font-semibold shadow-sm transition active:scale-95"
               >
-                <Icon name="plus" className="w-3.5 h-3.5" /> New Metric
+                <Icon name="plus" className="w-3.5 h-3.5" />
+                <span>New Metric</span>
               </button>
             </div>
           </header>
 
-          {/* Quick Target Bubbles (Click to Edit) */}
+          {/* Undo / Restore Deleted Days Notification Banner */}
+          {showUndoBanner && recentlyDeleted.length > 0 && (
+            <div className="mb-5 p-3 rounded-2xl bg-amber-50 dark:bg-midnight-900 border border-amber-200 dark:border-amber-900/60 flex items-center justify-between text-xs animate-in fade-in">
+              <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                <Icon name="rotateCcw" className="w-4 h-4 text-amber-500" />
+                <span>{recentlyDeleted.length} day(s) moved to recycle bin.</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleRestoreDeleted}
+                  className="px-3 py-1 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition active:scale-95"
+                >
+                  Undo / Restore
+                </button>
+                <button 
+                  onClick={() => setShowUndoBanner(false)}
+                  className="text-stone-400 hover:text-stone-600 p-1"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Target Metric Bubbles (Click to Edit Target) */}
           <div className="flex gap-2 overflow-x-auto pb-3 custom-scrollbar mb-6">
             {metrics.map(m => {
               const latest = entries[entries.length - 1]?.[m.id] ?? 0;
@@ -351,18 +712,23 @@
                     setTempTargetVal(m.targetVal);
                   }}
                   className="flex-shrink-0 cursor-pointer p-3 rounded-2xl border transition-all duration-200 active:scale-95 shadow-sm"
-                  style={{ backgroundColor: m.bg, borderColor: `${m.color}40` }}
+                  style={{ 
+                    backgroundColor: darkMode ? (m.darkBg || '#1E293B') : m.bg, 
+                    borderColor: `${m.color}60` 
+                  }}
                 >
                   <div className="flex items-center justify-between gap-3 text-xs mb-1">
-                    <span className="font-semibold text-stone-700">{m.emoji} {m.name}</span>
-                    <span className="text-[10px] text-stone-400 flex items-center gap-0.5">
+                    <span className="font-semibold text-stone-700 dark:text-stone-200">{m.emoji} {m.name}</span>
+                    <span className="text-[10px] text-stone-400 dark:text-stone-400 flex items-center gap-0.5">
                       <Icon name="edit" className="w-2.5 h-2.5" /> Edit
                     </span>
                   </div>
-                  <div className="text-lg font-bold text-stone-800">
-                    {latest} <span className="text-xs font-normal text-stone-500">{m.unit}</span>
+                  <div className="text-lg font-bold text-stone-800 dark:text-white">
+                    {latest} <span className="text-xs font-normal text-stone-500 dark:text-stone-400">{m.unit}</span>
                   </div>
-                  <div className={`text-[10px] font-medium mt-1 px-2 py-0.5 rounded-full inline-block ${isPassing ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                  <div className={`text-[10px] font-medium mt-1 px-2 py-0.5 rounded-full inline-block ${
+                    isPassing ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                  }`}>
                     Target: {m.targetOp} {m.targetVal} {m.unit}
                   </div>
                 </div>
@@ -370,159 +736,471 @@
             })}
           </div>
 
-          {/* TAB 1: DASHBOARD */}
+          {}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
-              {/* Wednesday Detox Spotlight Card */}
-              {wednesdayStat && (
-                <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 border border-emerald-100 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2 text-emerald-800 font-semibold text-sm">
-                    <Icon name="sparkles" className="w-4 h-4 text-emerald-500" />
-                    <span>Your Wednesday Detox Trend</span>
-                  </div>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    You consistently spend <b className="text-emerald-700">{wednesdayStat.diffPercent}% less time</b> on your phone on Wednesdays ({wednesdayStat.avgScreenWed} hrs vs {wednesdayStat.avgScreenOthers} hrs average), and study <b className="text-emerald-700">+{wednesdayStat.avgKhanWed - wednesdayStat.avgKhanOthers} more mins</b> on Khan Academy!
-                  </p>
-                </div>
-              )}
+              
+              {/* Metric Filter Chips */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-semibold text-stone-400 mr-1">Visible Lines:</span>
+                {metrics.map(m => {
+                  const active = visibleMetrics[m.id] !== false;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setVisibleMetrics(prev => ({ ...prev, [m.id]: !active }))}
+                      className={`text-xs px-3 py-1 rounded-full font-medium transition flex items-center gap-1.5 border ${
+                        active 
+                          ? 'bg-white dark:bg-midnight-800 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-midnight-700 shadow-xs' 
+                          : 'bg-stone-100/60 dark:bg-midnight-950 text-stone-400 border-dashed border-stone-200 dark:border-midnight-800'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: active ? m.color : '#CBD5E1' }} />
+                      <span>{m.emoji} {m.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-              {/* Time Series Multi-Line Graph */}
-              <div className="bg-white p-5 rounded-3xl border border-stone-200/60 shadow-sm">
+              {/* Chart Card */}
+              <div className="bg-white dark:bg-midnight-800 p-5 rounded-3xl border border-stone-200/60 dark:border-midnight-700 shadow-sm transition-colors relative">
                 <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                   <div>
-                    <h2 className="font-bold text-stone-800 text-base">Timeline Trends</h2>
-                    <p className="text-xs text-stone-400">Past {entries.length} logged days</p>
+                    <h2 className="font-bold text-stone-800 dark:text-white text-base">Timeline Trends</h2>
+                    <p className="text-xs text-stone-400">
+                      {entries.length} logged days &middot; Tap or hover any column to inspect exact values
+                    </p>
                   </div>
+                  
                   <div className="flex items-center gap-2">
+                    {/* Trendline Toggle */}
+                    <button 
+                      onClick={() => setShowTrendlines(!showTrendlines)}
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium transition border ${
+                        showTrendlines 
+                          ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' 
+                          : 'bg-stone-100 dark:bg-midnight-700 text-stone-500 border-transparent'
+                      }`}
+                    >
+                      Trendlines: {showTrendlines ? 'ON' : 'OFF'}
+                    </button>
+
+                    {/* Normalized Toggle */}
                     <button 
                       onClick={() => setNormalizedMode(!normalizedMode)}
-                      className={`text-xs px-3 py-1 rounded-full font-medium transition ${normalizedMode ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-stone-100 text-stone-600'}`}
+                      className={`text-xs px-3 py-1 rounded-full font-medium transition ${
+                        normalizedMode 
+                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200' 
+                          : 'bg-stone-100 dark:bg-midnight-700 text-stone-600 dark:text-stone-300'
+                      }`}
                     >
                       {normalizedMode ? 'Normalized (0-100%)' : 'Raw Values'}
                     </button>
                   </div>
                 </div>
 
-                {/* SVG Multi-Line Chart Canvas */}
-                <div className="w-full h-56 relative border-b border-l border-stone-200">
-                  <svg className="w-full h-full overflow-visible">
-                    {/* Horizontal Guideline Grids */}
-                    {[0, 25, 50, 75, 100].map((pct) => (
-                      <line 
-                        key={pct} 
-                        x1="0%" 
-                        y1={`${100 - pct}%`} 
-                        x2="100%" 
-                        y2={`${100 - pct}%`} 
-                        stroke="#F3F4F6" 
-                        strokeDasharray="4 4" 
-                      />
-                    ))}
-
-                    {/* Metric Polylines */}
-                    {metrics.map(m => {
-                      const points = entries.map((entry, idx) => {
-                        const x = (idx / (entries.length - 1)) * 100;
-                        const val = entry[m.id] !== undefined ? entry[m.id] : m.min;
-                        const normalizedY = ((val - m.min) / (m.max - m.min)) * 100;
-                        const y = 100 - Math.min(Math.max(normalizedY, 0), 100);
-                        return `${x}%,${y}%`;
-                      }).join(' ');
-
-                      return (
-                        <g key={m.id}>
-                          <polyline
-                            fill="none"
-                            stroke={m.color}
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            points={points}
-                            className="transition-all duration-300"
-                          />
-                          {entries.map((entry, idx) => {
-                            const cx = `${(idx / (entries.length - 1)) * 100}%`;
-                            const val = entry[m.id] !== undefined ? entry[m.id] : m.min;
-                            const normalizedY = ((val - m.min) / (m.max - m.min)) * 100;
-                            const cy = `${100 - Math.min(Math.max(normalizedY, 0), 100)}%`;
-                            return (
-                              <circle 
-                                key={idx} 
-                                cx={cx} 
-                                cy={cy} 
-                                r="3.5" 
-                                fill="#ffffff" 
-                                stroke={m.color} 
-                                strokeWidth="2" 
-                              />
-                            );
-                          })}
-                        </g>
-                      );
-                    })}
-                  </svg>
-                </div>
-
-                {/* X-Axis Day labels */}
-                <div className="flex justify-between mt-2 text-[10px] text-stone-400 font-medium px-1">
-                  {entries.map((d, i) => (
-                    <span key={i} className={d.dayName === 'Wed' ? 'text-emerald-600 font-bold' : ''}>
-                      {d.dayName}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Legend */}
-                <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-stone-100 justify-center">
-                  {metrics.map(m => (
-                    <div key={m.id} className="flex items-center gap-1.5 text-xs text-stone-600">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: m.color }} />
-                      <span>{m.name}</span>
+                {/* Floating Interactive Hover / Tap Card */}
+                {hoveredDayIndex !== null && entries[hoveredDayIndex] && (
+                  <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-purple-50/90 via-pink-50/90 to-amber-50/90 dark:from-midnight-900 dark:via-purple-950/60 dark:to-midnight-900 border border-purple-200/80 dark:border-purple-800 shadow-md animate-in fade-in duration-150">
+                    <div className="flex justify-between items-center pb-2 mb-2 border-b border-purple-200/50 dark:border-purple-800/50">
+                      <span className="font-bold text-xs text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                        <span>📅 {entries[hoveredDayIndex].date} ({entries[hoveredDayIndex].dayName})</span>
+                        {entries[hoveredDayIndex].dayName === 'Wed' && (
+                          <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                            Wednesday Detox
+                          </span>
+                        )}
+                      </span>
+                      <button 
+                        onClick={() => setHoveredDayIndex(null)}
+                        className="text-[11px] text-stone-400 hover:text-stone-600"
+                      >
+                        ✕
+                      </button>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                      {metrics.map(m => {
+                        if (visibleMetrics[m.id] === false) return null;
+                        const val = entries[hoveredDayIndex][m.id] ?? '-';
+                        return (
+                          <div key={m.id} className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: m.color }} />
+                            <span className="text-stone-600 dark:text-stone-300 font-medium">{m.name}:</span>
+                            <span className="font-bold text-stone-800 dark:text-white">{val} {m.unit}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {entries[hoveredDayIndex].note && (
+                      <p className="text-[11px] text-stone-500 dark:text-stone-400 italic mt-2 pt-1 border-t border-purple-100/50 dark:border-purple-900/30">
+                        "{entries[hoveredDayIndex].note}"
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* SVG Numerical ViewBox Engine (viewBox="0 0 600 240") */}
+                {entries.length > 0 ? (
+                  <div className="w-full h-64 relative border-b border-l border-stone-200 dark:border-midnight-700">
+                    <svg viewBox="0 0 600 240" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                      
+                      {/* Grid guidelines */}
+                      {[0, 60, 120, 180, 240].map((y) => (
+                        <line 
+                          key={y} 
+                          x1="0" 
+                          y1={y} 
+                          x2="600" 
+                          y2={y} 
+                          stroke={darkMode ? '#334155' : '#F1F5F9'} 
+                          strokeWidth="1"
+                          strokeDasharray="4 4" 
+                        />
+                      ))}
+
+                      {/* Active Day Vertical Hover Guide Marker */}
+                      {hoveredDayIndex !== null && entries.length > 1 && (
+                        <line 
+                          x1={(hoveredDayIndex / (entries.length - 1)) * 600}
+                          y1="0"
+                          x2={(hoveredDayIndex / (entries.length - 1)) * 600}
+                          y2="240"
+                          stroke="#C084FC"
+                          strokeWidth="2"
+                          strokeDasharray="4 3"
+                        />
+                      )}
+
+                      {/* Render Metric Polylines & Trendlines */}
+                      {metrics.map(m => {
+                        if (visibleMetrics[m.id] === false) return null;
+
+                        const numDays = entries.length;
+                        const pointsArray = entries.map((entry, idx) => {
+                          const x = numDays > 1 ? (idx / (numDays - 1)) * 600 : 300;
+                          const val = entry[m.id] !== undefined ? entry[m.id] : m.min;
+                          const norm = ((val - m.min) / Math.max(m.max - m.min, 1));
+                          const clampedNorm = Math.min(Math.max(norm, 0), 1);
+                          const y = 240 - (clampedNorm * 220 + 10);
+                          return { x, y, val };
+                        });
+
+                        const pointsString = pointsArray.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+                        // Calculate Trendline points (t = 0 to N-1)
+                        let trendlineElements = null;
+                        if (showTrendlines && timelineTrendlines[m.id] && numDays > 1) {
+                          const { slope, intercept } = timelineTrendlines[m.id];
+                          const yStartVal = intercept;
+                          const yEndVal = slope * (numDays - 1) + intercept;
+                          
+                          const normYStart = Math.min(Math.max((yStartVal - m.min) / Math.max(m.max - m.min, 1), 0), 1);
+                          const normYEnd = Math.min(Math.max((yEndVal - m.min) / Math.max(m.max - m.min, 1), 0), 1);
+
+                          const y1 = 240 - (normYStart * 220 + 10);
+                          const y2 = 240 - (normYEnd * 220 + 10);
+
+                          trendlineElements = (
+                            <line
+                              x1="0"
+                              y1={y1.toFixed(1)}
+                              x2="600"
+                              y2={y2.toFixed(1)}
+                              stroke={m.color}
+                              strokeWidth="2"
+                              strokeDasharray="5 3"
+                              opacity="0.8"
+                            />
+                          );
+                        }
+
+                        return (
+                          <g key={m.id}>
+                            {trendlineElements}
+                            <polyline
+                              fill="none"
+                              stroke={m.color}
+                              strokeWidth="3.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              points={pointsString}
+                            />
+                            {pointsArray.map((p, idx) => {
+                              const isHovered = hoveredDayIndex === idx;
+                              return (
+                                <circle 
+                                  key={idx} 
+                                  cx={p.x} 
+                                  cy={p.y} 
+                                  r={isHovered ? 7 : 4.5} 
+                                  fill={darkMode ? '#1E293B' : '#ffffff'} 
+                                  stroke={m.color} 
+                                  strokeWidth={isHovered ? 3.5 : 2.5} 
+                                  className="transition-all duration-150 cursor-pointer"
+                                />
+                              );
+                            })}
+                          </g>
+                        );
+                      })}
+
+                      {/* Interactive Column Click/Touch Listeners */}
+                      {entries.map((_, idx) => {
+                        const colWidth = 600 / Math.max(entries.length, 1);
+                        const x = idx * colWidth;
+                        return (
+                          <rect
+                            key={`col-${idx}`}
+                            x={x}
+                            y="0"
+                            width={colWidth}
+                            height="240"
+                            fill="transparent"
+                            className="cursor-pointer"
+                            onMouseEnter={() => setHoveredDayIndex(idx)}
+                            onClick={() => setHoveredDayIndex(idx)}
+                          />
+                        );
+                      })}
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="h-48 flex flex-col items-center justify-center border-2 border-dashed border-stone-200 dark:border-midnight-700 rounded-2xl text-center p-4">
+                    <p className="text-sm font-semibold text-stone-600 dark:text-stone-300 mb-1">No days logged yet!</p>
+                    <p className="text-xs text-stone-400 mb-3">Head to "Log Day" to record your first routine check-in.</p>
+                  </div>
+                )}
+
+                {/* Day Labels below chart */}
+                {entries.length > 0 && (
+                  <div className="flex justify-between mt-2 text-[10px] text-stone-400 font-medium px-1">
+                    {entries.map((d, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setHoveredDayIndex(i)}
+                        className={`transition ${hoveredDayIndex === i ? 'text-purple-600 dark:text-purple-400 font-bold underline' : d.dayName === 'Wed' ? 'text-emerald-500 font-bold' : ''}`}
+                      >
+                        {d.dayName}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Action Bar below chart: Clear Starter Demo Data appears ONLY when demo data exists */}
+              <div className="flex justify-between items-center pt-2">
+                {hasDemoData ? (
+                  <button
+                    onClick={handleClearStarterDemoData}
+                    className="text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 flex items-center gap-1 font-semibold"
+                  >
+                    <Icon name="trash" className="w-3.5 h-3.5" /> Clear Starter Demo Data
+                  </button>
+                ) : (
+                  <span className="text-xs text-stone-400">✨ Personal Tracking Active</span>
+                )}
+                
+                <button
+                  onClick={() => setIsAddingMetric(true)}
+                  className="text-xs text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1"
+                >
+                  <Icon name="plus" className="w-3.5 h-3.5" /> Add Trackable Habit
+                </button>
+              </div>
+
             </div>
           )}
 
-          {/* TAB 2: LINEAR REGRESSION SANDBOX */}
+          {}
+          {activeTab === 'statsLab' && (
+            <div className="space-y-6">
+              
+              <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 dark:from-midnight-900 dark:via-purple-950 dark:to-midnight-900 p-4 rounded-3xl border border-purple-100 dark:border-purple-900/60 shadow-sm flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-stone-800 dark:text-white flex items-center gap-1.5">
+                    <Icon name="graduation" className="w-4 h-4 text-purple-600 dark:text-purple-400" /> AP Statistics Course Lab
+                  </h2>
+                  <p className="text-[11px] text-stone-500 dark:text-stone-400">Official College Board curriculum applied to your habits</p>
+                </div>
+                <select 
+                  value={apMetric} 
+                  onChange={(e) => setApMetric(e.target.value)}
+                  className="bg-white dark:bg-midnight-800 px-3 py-1.5 rounded-xl border border-purple-200 dark:border-midnight-700 text-xs font-bold text-purple-700 dark:text-purple-300 shadow-sm outline-none"
+                >
+                  {metrics.map(m => (
+                    <option key={m.id} value={m.id}>{m.emoji} {m.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {apStatsData ? (
+                <>
+                  {/* UNIT 1: Five-Number Summary */}
+                  <div className="bg-white dark:bg-midnight-800 p-5 rounded-3xl border border-stone-200/60 dark:border-midnight-700 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-pink-50 dark:bg-pink-950 text-pink-700 dark:text-pink-300 border border-pink-100 dark:border-pink-900">
+                        Unit 1 • Quantitative Data
+                      </span>
+                      <button 
+                        onClick={() => setActiveTooltip(STATS_GLOSSARY.iqr)}
+                        className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                      >
+                        <Icon name="info" className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <h3 className="font-bold text-stone-800 dark:text-white text-sm">Five-Number Summary</h3>
+                    
+                    <div className="grid grid-cols-5 gap-1.5 text-center">
+                      <div className="p-2 bg-stone-50 dark:bg-midnight-700 rounded-xl border border-stone-100 dark:border-midnight-600">
+                        <div className="text-[10px] text-stone-400">Min</div>
+                        <div className="font-mono font-bold text-xs text-stone-700 dark:text-white">{apStatsData.min}</div>
+                      </div>
+                      <div className="p-2 bg-stone-50 dark:bg-midnight-700 rounded-xl border border-stone-100 dark:border-midnight-600">
+                        <div className="text-[10px] text-stone-400">Q₁ (25%)</div>
+                        <div className="font-mono font-bold text-xs text-stone-700 dark:text-white">{apStatsData.q1.toFixed(1)}</div>
+                      </div>
+                      <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded-xl border border-purple-200 dark:border-purple-800">
+                        <div className="text-[10px] text-purple-500 font-semibold">Median</div>
+                        <div className="font-mono font-bold text-xs text-purple-700 dark:text-purple-300">{apStatsData.median.toFixed(1)}</div>
+                      </div>
+                      <div className="p-2 bg-stone-50 dark:bg-midnight-700 rounded-xl border border-stone-100 dark:border-midnight-600">
+                        <div className="text-[10px] text-stone-400">Q₃ (75%)</div>
+                        <div className="font-mono font-bold text-xs text-stone-700 dark:text-white">{apStatsData.q3.toFixed(1)}</div>
+                      </div>
+                      <div className="p-2 bg-stone-50 dark:bg-midnight-700 rounded-xl border border-stone-100 dark:border-midnight-600">
+                        <div className="text-[10px] text-stone-400">Max</div>
+                        <div className="font-mono font-bold text-xs text-stone-700 dark:text-white">{apStatsData.max}</div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-2xl bg-amber-50/50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 text-xs text-stone-700 dark:text-stone-300 space-y-1">
+                      <div className="font-bold text-amber-800 dark:text-amber-300">📐 AP Outlier Rule: 1.5 × IQR</div>
+                      <p className="text-[11px] text-stone-600 dark:text-stone-400">
+                        IQR = Q₃ - Q₁ = <span className="font-mono font-bold">{apStatsData.iqr.toFixed(1)}</span>. 
+                        Outlier boundaries are &lt; {apStatsData.lowerFence.toFixed(1)} or &gt; {apStatsData.upperFence.toFixed(1)}.
+                      </p>
+                      <div className="text-[11px] font-medium text-amber-900 dark:text-amber-200 pt-0.5">
+                        {apStatsData.outliers.length > 0 ? (
+                          <span>🚨 Detected Outlier(s): <b className="font-mono">{apStatsData.outliers.join(', ')}</b></span>
+                        ) : (
+                          <span>✅ No statistical outliers detected in your logged data!</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* UNIT 4: Z-Scores */}
+                  <div className="bg-white dark:bg-midnight-800 p-5 rounded-3xl border border-stone-200/60 dark:border-midnight-700 shadow-sm space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900">
+                        Unit 4 • Normal Distributions & Z-Scores
+                      </span>
+                      <button 
+                        onClick={() => setActiveTooltip(STATS_GLOSSARY.zScore)}
+                        className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                      >
+                        <Icon name="info" className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <h3 className="font-bold text-stone-800 dark:text-white text-sm">Calculate Z-Score: z = (x - x̄) / s</h3>
+                    
+                    <div className="p-3 bg-indigo-50/50 dark:bg-indigo-950/40 rounded-2xl border border-indigo-100 dark:border-indigo-900 text-xs">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-stone-500 dark:text-stone-400">Sample Mean: <b className="text-stone-800 dark:text-white">{apStatsData.mean.toFixed(2)}</b></span>
+                        <span className="text-stone-500 dark:text-stone-400">Sample StdDev (s): <b className="text-stone-800 dark:text-white">{apStatsData.s.toFixed(2)}</b></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* UNIT 7: 95% Confidence Interval */}
+                  <div className="bg-white dark:bg-midnight-800 p-5 rounded-3xl border border-stone-200/60 dark:border-midnight-700 shadow-sm space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900">
+                        Unit 7 • Inference for Means
+                      </span>
+                      <button 
+                        onClick={() => setActiveTooltip(STATS_GLOSSARY.ci)}
+                        className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                      >
+                        <Icon name="info" className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <h3 className="font-bold text-stone-800 dark:text-white text-sm">95% One-Sample t-Interval</h3>
+
+                    <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-100 dark:border-emerald-900 text-xs">
+                      <div className="text-center font-mono font-bold text-emerald-800 dark:text-emerald-300 text-base mb-1">
+                        ({apStatsData.ciLower.toFixed(2)}, {apStatsData.ciUpper.toFixed(2)}) {metrics.find(m => m.id === apMetric)?.unit}
+                      </div>
+                      <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed pt-1">
+                        <b>AP Template:</b> <i>"We are 95% confident that the true long-run population mean daily {metrics.find(m=>m.id===apMetric)?.name} is between {apStatsData.ciLower.toFixed(2)} and {apStatsData.ciUpper.toFixed(2)} {metrics.find(m=>m.id===apMetric)?.unit}."</i>
+                      </p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="bg-white dark:bg-midnight-800 p-8 rounded-3xl text-center border border-stone-200 dark:border-midnight-700">
+                  <p className="text-xs text-stone-400">Need at least 2 logged days to calculate statistical parameters.</p>
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {}
           {activeTab === 'regression' && (
             <div className="space-y-6">
-              <div className="bg-white p-5 rounded-3xl border border-stone-200/60 shadow-sm">
+              <div className="bg-white dark:bg-midnight-800 p-5 rounded-3xl border border-stone-200/60 dark:border-midnight-700 shadow-sm">
+                
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Icon name="calculator" className="w-5 h-5 text-indigo-400" />
-                    <h2 className="font-bold text-stone-800 text-base">Linear Regression Sandbox</h2>
+                    <h2 className="font-bold text-stone-800 dark:text-white text-base">Linear Regression Sandbox</h2>
                   </div>
-                  <span className="text-[11px] bg-indigo-50 text-indigo-600 font-medium px-2.5 py-1 rounded-full border border-indigo-100">
-                    y = mx + b
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      onClick={() => setActiveTooltip(STATS_GLOSSARY.pearson)} 
+                      className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                    >
+                      <Icon name="info" className="w-4 h-4" />
+                    </button>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900">
+                      ŷ = a + bx
+                    </span>
+                  </div>
                 </div>
 
-                {/* Metric Selector X vs Y */}
                 <div className="grid grid-cols-2 gap-3 mb-5">
-                  <div className="bg-stone-50 p-3 rounded-2xl border border-stone-200">
-                    <label className="text-[10px] uppercase font-bold text-stone-400 block mb-1">Independent Variable (X)</label>
+                  <div className="bg-stone-50 dark:bg-midnight-700 p-3 rounded-2xl border border-stone-200 dark:border-midnight-600">
+                    <label className="text-[10px] uppercase font-bold text-stone-400 block mb-1">Explanatory (X)</label>
                     <select 
                       value={regX} 
                       onChange={(e) => setRegX(e.target.value)}
-                      className="w-full bg-transparent text-xs font-semibold text-stone-700 outline-none"
+                      className="w-full bg-white dark:bg-midnight-800 text-xs font-semibold text-stone-800 dark:text-stone-100 p-1.5 rounded-lg border border-stone-200 dark:border-midnight-600 outline-none"
                     >
                       {metrics.map(m => (
-                        <option key={m.id} value={m.id}>{m.emoji} {m.name} ({m.unit})</option>
+                        <option key={m.id} value={m.id} className="bg-white dark:bg-midnight-800 text-stone-800 dark:text-stone-100">
+                          {m.emoji} {m.name} ({m.unit})
+                        </option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="bg-stone-50 p-3 rounded-2xl border border-stone-200">
-                    <label className="text-[10px] uppercase font-bold text-stone-400 block mb-1">Dependent Variable (Y)</label>
+                  <div className="bg-stone-50 dark:bg-midnight-700 p-3 rounded-2xl border border-stone-200 dark:border-midnight-600">
+                    <label className="text-[10px] uppercase font-bold text-stone-400 block mb-1">Response (Y)</label>
                     <select 
                       value={regY} 
                       onChange={(e) => setRegY(e.target.value)}
-                      className="w-full bg-transparent text-xs font-semibold text-stone-700 outline-none"
+                      className="w-full bg-white dark:bg-midnight-800 text-xs font-semibold text-stone-800 dark:text-stone-100 p-1.5 rounded-lg border border-stone-200 dark:border-midnight-600 outline-none"
                     >
                       {metrics.map(m => (
-                        <option key={m.id} value={m.id}>{m.emoji} {m.name} ({m.unit})</option>
+                        <option key={m.id} value={m.id} className="bg-white dark:bg-midnight-800 text-stone-800 dark:text-stone-100">
+                          {m.emoji} {m.name} ({m.unit})
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -530,30 +1208,26 @@
 
                 {regStats ? (
                   <>
-                    {/* Math Nerd Stats Card */}
-                    <div className="grid grid-cols-3 gap-2 mb-5 text-center">
-                      <div className="p-2.5 bg-rose-50/50 rounded-2xl border border-rose-100">
-                        <div className="text-[10px] text-stone-400">Slope (m)</div>
-                        <div className="font-mono text-sm font-bold text-rose-600">{regStats.slope.toFixed(3)}</div>
+                    <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                      <div className="p-2.5 bg-rose-50/50 dark:bg-rose-950/40 rounded-2xl border border-rose-100 dark:border-rose-900">
+                        <div className="text-[10px] text-stone-400">Slope (b₁)</div>
+                        <div className="font-mono text-sm font-bold text-rose-600 dark:text-rose-400">{regStats.slope.toFixed(3)}</div>
                       </div>
-                      <div className="p-2.5 bg-purple-50/50 rounded-2xl border border-purple-100">
+                      <div className="p-2.5 bg-purple-50/50 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900">
                         <div className="text-[10px] text-stone-400">Pearson (r)</div>
-                        <div className="font-mono text-sm font-bold text-purple-600">{regStats.r.toFixed(3)}</div>
+                        <div className="font-mono text-sm font-bold text-purple-600 dark:text-purple-400">{regStats.r.toFixed(3)}</div>
                       </div>
-                      <div className="p-2.5 bg-amber-50/50 rounded-2xl border border-amber-100">
+                      <div className="p-2.5 bg-amber-50/50 dark:bg-amber-950/40 rounded-2xl border border-amber-100 dark:border-amber-900">
                         <div className="text-[10px] text-stone-400">R² Fit</div>
-                        <div className="font-mono text-sm font-bold text-amber-600">{(regStats.r2 * 100).toFixed(1)}%</div>
+                        <div className="font-mono text-sm font-bold text-amber-600 dark:text-amber-400">{(regStats.r2 * 100).toFixed(1)}%</div>
                       </div>
                     </div>
 
-                    {/* Desmos-style Scatter Plot with Best Fit Trendline */}
-                    <div className="w-full h-56 bg-stone-50/60 rounded-2xl border border-stone-200 relative p-4 flex items-center justify-center">
-                      <svg className="w-full h-full overflow-visible">
-                        {/* Grid */}
-                        <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="#E5E7EB" strokeDasharray="3 3"/>
-                        <line x1="50%" y1="0%" x2="50%" y2="100%" stroke="#E5E7EB" strokeDasharray="3 3"/>
+                    <div className="w-full h-56 bg-stone-50/60 dark:bg-midnight-950 rounded-2xl border border-stone-200 dark:border-midnight-700 relative p-4 flex items-center justify-center">
+                      <svg viewBox="0 0 600 240" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                        <line x1="0" y1="120" x2="600" y2="120" stroke={darkMode ? '#334155' : '#E5E7EB'} strokeDasharray="4 4"/>
+                        <line x1="300" y1="0" x2="300" y2="240" stroke={darkMode ? '#334155' : '#E5E7EB'} strokeDasharray="4 4"/>
 
-                        {/* Best Fit Line */}
                         {(() => {
                           const xMetric = metrics.find(m => m.id === regX) || { min: 0, max: 10 };
                           const yMetric = metrics.find(m => m.id === regY) || { min: 0, max: 10 };
@@ -561,65 +1235,64 @@
                           const yAtMinX = regStats.slope * xMetric.min + regStats.intercept;
                           const yAtMaxX = regStats.slope * xMetric.max + regStats.intercept;
 
-                          const normX1 = 0;
-                          const normY1 = 100 - (((yAtMinX - yMetric.min) / (yMetric.max - yMetric.min)) * 100);
-                          const normX2 = 100;
-                          const normY2 = 100 - (((yAtMaxX - yMetric.min) / (yMetric.max - yMetric.min)) * 100);
+                          const normY1 = 1 - Math.min(Math.max((yAtMinX - yMetric.min) / Math.max(yMetric.max - yMetric.min, 1), 0), 1);
+                          const normY2 = 1 - Math.min(Math.max((yAtMaxX - yMetric.min) / Math.max(yMetric.max - yMetric.min, 1), 0), 1);
 
                           return (
                             <line 
-                              x1={`${normX1}%`} 
-                              y1={`${Math.min(Math.max(normY1, 0), 100)}%`} 
-                              x2={`${normX2}%`} 
-                              y2={`${Math.min(Math.max(normY2, 0), 100)}%`} 
-                              stroke="#6366F1" 
-                              strokeWidth="2.5" 
-                              strokeDasharray="4 2" 
+                              x1="0" 
+                              y1={(normY1 * 220 + 10).toFixed(1)} 
+                              x2="600" 
+                              y2={(normY2 * 220 + 10).toFixed(1)} 
+                              stroke="#818CF8" 
+                              strokeWidth="3" 
+                              strokeDasharray="5 3" 
                             />
                           );
                         })()}
 
-                        {/* Scatter points */}
                         {regStats.pairs.map((p, i) => {
                           const xMetric = metrics.find(m => m.id === regX) || { min: 0, max: 10 };
                           const yMetric = metrics.find(m => m.id === regY) || { min: 0, max: 10 };
 
-                          const cx = `${((p.x - xMetric.min) / (xMetric.max - xMetric.min)) * 100}%`;
-                          const cy = `${100 - (((p.y - yMetric.min) / (yMetric.max - yMetric.min)) * 100)}%`;
+                          const normX = Math.min(Math.max((p.x - xMetric.min) / Math.max(xMetric.max - xMetric.min, 1), 0), 1);
+                          const normY = 1 - Math.min(Math.max((p.y - yMetric.min) / Math.max(yMetric.max - yMetric.min, 1), 0), 1);
+
+                          const cx = normX * 560 + 20;
+                          const cy = normY * 200 + 20;
 
                           return (
                             <circle 
                               key={i} 
-                              cx={cx} 
-                              cy={cy} 
-                              r="4.5" 
-                              fill="#F472B6" 
-                              stroke="#ffffff" 
-                              strokeWidth="1.5" 
+                              cx={cx.toFixed(1)} 
+                              cy={cy.toFixed(1)} 
+                              r="5" 
+                              fill="#9FA8DA" 
+                              stroke={darkMode ? '#1E293B' : '#ffffff'} 
+                              strokeWidth="2" 
                             />
                           );
                         })}
                       </svg>
                     </div>
 
-                    {/* Prediction Slider */}
-                    <div className="mt-5 p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100">
+                    <div className="mt-5 p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900">
                       <div className="flex justify-between items-center text-xs mb-2">
-                        <span className="font-semibold text-stone-700">Predictive Calculator</span>
-                        <span className="text-indigo-600 font-bold">{regX}: {predictionX}</span>
+                        <span className="font-semibold text-stone-700 dark:text-stone-300">Model Predictor</span>
+                        <span className="text-indigo-600 dark:text-indigo-300 font-bold">{regX}: {predictionX}</span>
                       </div>
                       <input 
                         type="range"
                         min={metrics.find(m => m.id === regX)?.min || 0}
-                        max={metrics.find(m => m.id === regX)?.max || 10}
-                        step={metrics.find(m => m.id === regX)?.step || 0.1}
+                        max={metrics.find(m => m.id === regX)?.max || 100}
+                        step={metrics.find(m => m.id === regX)?.step || 1}
                         value={predictionX}
                         onChange={(e) => setPredictionX(Number(e.target.value))}
-                        className="w-full h-1.5 bg-stone-200 rounded-lg cursor-pointer"
+                        className="w-full h-1.5 bg-stone-200 dark:bg-midnight-700 rounded-lg cursor-pointer"
                       />
-                      <div className="mt-3 text-center text-xs text-stone-600">
-                        Predicted <b className="text-stone-800">{regY}</b>: {' '}
-                        <span className="text-sm font-bold text-indigo-600">
+                      <div className="mt-3 text-center text-xs text-stone-600 dark:text-stone-300">
+                        Predicted <b className="text-stone-800 dark:text-white">{regY}</b>: {' '}
+                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-300">
                           {(regStats.slope * predictionX + regStats.intercept).toFixed(2)}
                         </span>
                       </div>
@@ -632,28 +1305,45 @@
             </div>
           )}
 
-          {/* TAB 3: DAILY QUICK LOGGER */}
+          {}
           {activeTab === 'log' && (
-            <form onSubmit={handleSaveEntry} className="bg-white p-5 rounded-3xl border border-stone-200/60 shadow-sm space-y-4">
-              <h2 className="font-bold text-stone-800 text-base mb-2">Log Daily Routine</h2>
+            <form 
+              onSubmit={handleSaveEntry}
+              className="bg-white dark:bg-midnight-800 p-5 rounded-3xl border border-stone-200/60 dark:border-midnight-700 shadow-sm space-y-4"
+            >
+              <h2 className="font-bold text-stone-800 dark:text-white text-base mb-1">Log Daily Routine & Focus</h2>
+              <p className="text-xs text-stone-400 dark:text-stone-400">Save a day's check-in to plot it immediately on your trends timeline.</p>
               
               <div>
-                <label className="text-xs font-semibold text-stone-600 block mb-1">Date</label>
+                <label className="text-xs font-semibold text-stone-600 dark:text-stone-300 block mb-1">Date</label>
                 <input 
                   type="date" 
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-pink-400"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white focus:outline-pink-400 font-medium"
                   required 
                 />
               </div>
 
               {metrics.map(m => (
-                <div key={m.id} className="p-3 rounded-2xl bg-stone-50 border border-stone-100">
-                  <div className="flex justify-between items-center text-xs mb-1 font-semibold text-stone-700">
-                    <span>{m.emoji} {m.name}</span>
-                    <span className="font-bold text-pink-600">{formData[m.id] ?? m.min} {m.unit}</span>
+                <div key={m.id} className="p-3.5 rounded-2xl bg-stone-50 dark:bg-midnight-900 border border-stone-100 dark:border-midnight-800">
+                  <div className="flex justify-between items-center text-xs mb-1.5 font-semibold text-stone-700 dark:text-stone-200">
+                    <div className="flex items-center gap-1.5">
+                      <span>{m.emoji} {m.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingBoundsMetric(m)}
+                        className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-1"
+                        title="Edit Bounds"
+                      >
+                        <Icon name="sliders" className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <span className="font-bold text-indigo-500 dark:text-indigo-300">
+                      {formData[m.id] ?? m.min} {m.unit}
+                    </span>
                   </div>
+                  
                   <input 
                     type="range"
                     min={m.min}
@@ -661,70 +1351,407 @@
                     step={m.step}
                     value={formData[m.id] ?? m.min}
                     onChange={(e) => setFormData({ ...formData, [m.id]: Number(e.target.value) })}
-                    className="w-full h-1.5 bg-stone-200 rounded-lg cursor-pointer"
+                    className="w-full h-1.5 bg-stone-200 dark:bg-midnight-700 rounded-lg cursor-pointer"
                   />
+                  
+                  <div className="flex justify-between text-[10px] text-stone-400 mt-1 font-mono">
+                    <span>Min: {m.min} {m.unit}</span>
+                    <span>Max: {m.max} {m.unit}</span>
+                  </div>
                 </div>
               ))}
 
               <div>
-                <label className="text-xs font-semibold text-stone-600 block mb-1">Reflection / Notes</label>
+                <label className="text-xs font-semibold text-stone-600 dark:text-stone-300 block mb-1">Notes / Reflection</label>
                 <input 
                   type="text" 
-                  placeholder="e.g., Felt super energetic after 9h sleep!"
-                  value={formData.note}
+                  placeholder="e.g. Completed SAT Reading passage drills, felt confident"
+                  value={formData.note || ''}
                   onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-pink-400"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white focus:outline-pink-400"
                 />
               </div>
 
               <button 
                 type="submit" 
-                className="w-full py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-2xl font-bold text-xs shadow-md shadow-pink-100 transition active:scale-95"
+                className="w-full py-3 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 text-white rounded-2xl font-bold text-xs shadow-md shadow-purple-100 dark:shadow-none transition active:scale-95 flex items-center justify-center gap-1.5"
               >
-                Save Daily Log
+                <Icon name="check" className="w-4 h-4" />
+                <span>Save & Plot to Timeline</span>
               </button>
             </form>
           )}
 
-          {/* TAB 4: HISTORY & ENTRIES */}
-          {activeTab === 'history' && (
-            <div className="space-y-3">
-              <h2 className="font-bold text-stone-800 text-base mb-2">Logged Days</h2>
-              {entries.slice().reverse().map((entry, idx) => (
-                <div key={idx} className="bg-white p-4 rounded-2xl border border-stone-200/60 shadow-sm text-xs">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-stone-800">{entry.date} ({entry.dayName})</span>
-                    {entry.note && <span className="text-[11px] text-stone-400 italic">"{entry.note}"</span>}
+          {}
+          {activeTab === 'todos' && (
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-midnight-800 p-5 rounded-3xl border border-stone-200/60 dark:border-midnight-700 shadow-sm space-y-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="font-bold text-stone-800 dark:text-white text-base">Daily Focus Checklist</h2>
+                    <p className="text-xs text-stone-400">Track tasks, SAT practice blocks and homework</p>
                   </div>
-                  <div className="flex flex-wrap gap-2 text-[11px]">
-                    {metrics.map(m => (
-                      <span key={m.id} className="px-2.5 py-1 rounded-full bg-stone-100 text-stone-600">
-                        {m.emoji} {entry[m.id] !== undefined ? entry[m.id] : '-'} {m.unit}
-                      </span>
-                    ))}
-                  </div>
+                  <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950 px-2.5 py-1 rounded-full">
+                    {todos.filter(t => t.done).length} / {todos.length} done
+                  </span>
                 </div>
-              ))}
+
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newTodoText.trim()) return;
+                    setTodos(prev => [...prev, { id: 't_' + Date.now(), text: newTodoText.trim(), done: false }]);
+                    setNewTodoText('');
+                  }}
+                  className="flex gap-2"
+                >
+                  <input 
+                    type="text" 
+                    placeholder="Add a new task or study target..."
+                    value={newTodoText}
+                    onChange={(e) => setNewTodoText(e.target.value)}
+                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white focus:outline-pink-400"
+                  />
+                  <button 
+                    type="submit" 
+                    className="px-4 py-2 bg-indigo-400 text-white font-bold text-xs rounded-xl shadow-xs active:scale-95"
+                  >
+                    Add
+                  </button>
+                </form>
+
+                <div className="space-y-2 pt-2">
+                  {todos.map(todo => (
+                    <div 
+                      key={todo.id}
+                      className="p-3 bg-stone-50 dark:bg-midnight-900 rounded-2xl border border-stone-100 dark:border-midnight-800 flex items-center justify-between text-xs"
+                    >
+                      <button 
+                        onClick={() => {
+                          setTodos(prev => prev.map(t => t.id === todo.id ? { ...t, done: !t.done } : t));
+                        }}
+                        className="flex items-center gap-2.5 text-left flex-1"
+                      >
+                        <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition ${
+                          todo.done ? 'bg-indigo-400 border-indigo-400 text-white' : 'border-stone-300 dark:border-midnight-600'
+                        }`}>
+                          {todo.done && <span className="text-[10px]">✓</span>}
+                        </div>
+                        <span className={`text-stone-700 dark:text-stone-300 ${todo.done ? 'line-through text-stone-400 dark:text-stone-500' : ''}`}>
+                          {todo.text}
+                        </span>
+                      </button>
+
+                      <button 
+                        onClick={() => setTodos(prev => prev.filter(t => t.id !== todo.id))}
+                        className="text-stone-300 hover:text-rose-500 p-1"
+                      >
+                        <Icon name="trash" className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* EDIT TARGET MODAL */}
+          {}
+          {activeTab === 'history' && (
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                <div>
+                  <h2 className="font-bold text-stone-800 dark:text-white text-base">Logged History</h2>
+                  <span className="text-xs text-stone-400">{entries.length} recorded days</span>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {entries.length > 0 && (
+                    <button 
+                      onClick={() => {
+                        if (selectedEntryIds.length === entries.length) {
+                          setSelectedEntryIds([]);
+                        } else {
+                          setSelectedEntryIds(entries.map(e => e.id));
+                        }
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-xl bg-stone-100 dark:bg-midnight-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 font-medium"
+                    >
+                      {selectedEntryIds.length === entries.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  )}
+
+                  {selectedEntryIds.length > 0 && (
+                    <button 
+                      onClick={handleDeleteSelectedEntries}
+                      className="text-xs px-3 py-1 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 shadow-sm flex items-center gap-1 active:scale-95"
+                    >
+                      <Icon name="trash" className="w-3.5 h-3.5" />
+                      Delete Selected ({selectedEntryIds.length})
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {entries.length === 0 ? (
+                <div className="bg-white dark:bg-midnight-800 p-8 rounded-3xl text-center border border-stone-200 dark:border-midnight-700">
+                  <p className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Your diary archive is currently empty.</p>
+                  <p className="text-xs text-stone-400 mb-4">Start logging days using the "Log Day" tab.</p>
+                  {recentlyDeleted.length > 0 && (
+                    <button 
+                      onClick={handleRestoreDeleted}
+                      className="px-4 py-2 bg-amber-500 text-white rounded-2xl font-bold text-xs shadow-sm hover:bg-amber-600 transition"
+                    >
+                      Restore {recentlyDeleted.length} Recently Deleted Days
+                    </button>
+                  )}
+                </div>
+              ) : (
+                entries.slice().reverse().map((entry) => {
+                  const isSelected = selectedEntryIds.includes(entry.id);
+                  return (
+                    <div 
+                      key={entry.id} 
+                      className={`p-4 rounded-2xl border transition-all text-xs flex gap-3 items-start ${
+                        isSelected 
+                          ? 'bg-rose-50/50 dark:bg-rose-950/30 border-rose-300 dark:border-rose-900/60 shadow-xs' 
+                          : 'bg-white dark:bg-midnight-800 border-stone-200/60 dark:border-midnight-700 shadow-sm'
+                      }`}
+                    >
+                      <input 
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {
+                          setSelectedEntryIds(prev => 
+                            prev.includes(entry.id) ? prev.filter(x => x !== entry.id) : [...prev, entry.id]
+                          );
+                        }}
+                        className="mt-1 w-4 h-4 rounded text-rose-500 accent-rose-500 cursor-pointer"
+                      />
+
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="font-bold text-stone-800 dark:text-white">
+                            {entry.date} ({entry.dayName})
+                            {entry.isDemo && <span className="ml-2 text-[10px] text-stone-400 font-normal">[Sample Demo]</span>}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button 
+                              onClick={() => setEditingEntry(entry)}
+                              className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-1"
+                              title="Edit this day"
+                            >
+                              <Icon name="edit" className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteSingleEntry(entry.id)}
+                              className="text-stone-300 hover:text-rose-500 p-1"
+                              title="Delete single day"
+                            >
+                              <Icon name="trash" className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {entry.note && (
+                          <p className="text-[11px] text-stone-500 dark:text-stone-400 italic mb-2">"{entry.note}"</p>
+                        )}
+
+                        <div className="flex flex-wrap gap-1.5 text-[11px]">
+                          {metrics.map(m => (
+                            <span key={m.id} className="px-2 py-0.5 rounded-lg bg-stone-100 dark:bg-midnight-700 text-stone-600 dark:text-stone-300">
+                              {m.emoji} {m.name}: <strong style={{ color: m.color }}>{entry[m.id] !== undefined ? entry[m.id] : '-'} {m.unit}</strong>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {}
+          {isAddingMetric && (
+            <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+              <div className="bg-white dark:bg-midnight-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-stone-100 dark:border-midnight-700 space-y-3.5">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-stone-800 dark:text-white text-sm">Add New Trackable Metric</h3>
+                  <button onClick={() => setIsAddingMetric(false)} className="text-stone-400">✕</button>
+                </div>
+                
+                <form onSubmit={handleCreateCustomMetric} className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-2">
+                      <label className="text-[10px] font-bold text-stone-400">Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Vocabulary Drills" 
+                        value={newMetricName} 
+                        onChange={e => setNewMetricName(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-stone-400">Emoji</label>
+                      <input 
+                        type="text" 
+                        value={newMetricEmoji} 
+                        onChange={e => setNewMetricEmoji(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-center"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-stone-400">Unit Label</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. cards, min, pts" 
+                        value={newMetricUnit} 
+                        onChange={e => setNewMetricUnit(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-stone-400">Target Criteria</label>
+                      <div className="flex gap-1">
+                        <select 
+                          value={newMetricTargetOp}
+                          onChange={e => setNewMetricTargetOp(e.target.value)}
+                          className="px-1 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-900 text-stone-800 dark:text-white"
+                        >
+                          <option value=">">&gt;</option>
+                          <option value="<">&lt;</option>
+                        </select>
+                        <input 
+                          type="number" 
+                          value={newMetricTargetVal} 
+                          onChange={e => setNewMetricTargetVal(Number(e.target.value))}
+                          className="w-full px-2 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-stone-400">Min</label>
+                      <input 
+                        type="number" 
+                        value={newMetricMin} 
+                        onChange={e => setNewMetricMin(Number(e.target.value))}
+                        className="w-full px-2 py-1 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-stone-400">Max</label>
+                      <input 
+                        type="number" 
+                        value={newMetricMax} 
+                        onChange={e => setNewMetricMax(Number(e.target.value))}
+                        className="w-full px-2 py-1 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-stone-400">Step</label>
+                      <input 
+                        type="number" 
+                        value={newMetricStep} 
+                        onChange={e => setNewMetricStep(Number(e.target.value))}
+                        className="w-full px-2 py-1 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-stone-400 block mb-1">Color Palette</label>
+                    <div className="flex gap-2">
+                      {PRESET_PASTEL_COLORS.map(c => (
+                        <button
+                          key={c.name}
+                          type="button"
+                          onClick={() => setNewMetricColorObj(c)}
+                          className={`w-6 h-6 rounded-full border-2 transition ${
+                            newMetricColorObj.name === c.name ? 'border-stone-800 dark:border-white scale-110 shadow-xs' : 'border-transparent'
+                          }`}
+                          style={{ backgroundColor: c.color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => setIsAddingMetric(false)}
+                      className="flex-1 py-2 text-xs font-semibold rounded-xl bg-stone-100 dark:bg-midnight-700 text-stone-600 dark:text-stone-300"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      className="flex-1 py-2 text-xs font-semibold rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 shadow-sm"
+                    >
+                      Create Metric
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {}
+          {activeTooltip && (
+            <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+              <div className="bg-white dark:bg-midnight-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-purple-100 dark:border-purple-900 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-stone-800 dark:text-white text-sm flex items-center gap-1.5">
+                    <Icon name="info" className="w-4 h-4 text-purple-500" /> {activeTooltip.title}
+                  </h3>
+                  <button onClick={() => setActiveTooltip(null)} className="text-stone-400 hover:text-stone-600">✕</button>
+                </div>
+                
+                <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                  {activeTooltip.simple}
+                </p>
+
+                <div className="p-3 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900 text-xs">
+                  <span className="font-bold text-purple-800 dark:text-purple-300 block mb-0.5">🎓 AP Exam Rubric Tip:</span>
+                  <p className="text-[11px] text-stone-600 dark:text-stone-300 leading-relaxed font-mono">
+                    {activeTooltip.apTip}
+                  </p>
+                </div>
+
+                <button 
+                  onClick={() => setActiveTooltip(null)}
+                  className="w-full py-2 bg-stone-100 dark:bg-midnight-700 text-stone-700 dark:text-stone-200 text-xs font-bold rounded-xl"
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          )}
+
           {editingTargetMetric && (
-            <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-stone-100 animate-in fade-in zoom-in-95">
-                <h3 className="font-bold text-stone-800 text-sm mb-1">
+            <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+              <div className="bg-white dark:bg-midnight-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-stone-100 dark:border-midnight-700">
+                <h3 className="font-bold text-stone-800 dark:text-white text-sm mb-1">
                   Adjust Target for {editingTargetMetric.emoji} {editingTargetMetric.name}
                 </h3>
                 <p className="text-xs text-stone-400 mb-4">Set your daily standard criteria</p>
 
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-sm font-bold text-stone-700">{editingTargetMetric.targetOp}</span>
+                  <span className="text-sm font-bold text-stone-700 dark:text-stone-200">{editingTargetMetric.targetOp}</span>
                   <input 
                     type="number"
                     step={editingTargetMetric.step}
                     value={tempTargetVal}
                     onChange={(e) => setTempTargetVal(Number(e.target.value))}
-                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-pink-400 font-bold"
+                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white font-bold"
                   />
                   <span className="text-xs text-stone-500">{editingTargetMetric.unit}</span>
                 </div>
@@ -732,16 +1759,16 @@
                 <div className="flex gap-2">
                   <button 
                     onClick={() => setEditingTargetMetric(null)}
-                    className="flex-1 py-2 text-xs font-semibold rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    className="flex-1 py-2 text-xs font-semibold rounded-xl bg-stone-100 dark:bg-midnight-700 text-stone-600 dark:text-stone-300"
                   >
                     Cancel
                   </button>
                   <button 
                     onClick={() => {
-                      setMetrics(metrics.map(m => m.id === editingTargetMetric.id ? { ...m, targetVal: tempTargetVal } : m));
+                      setMetrics(prev => prev.map(m => m.id === editingTargetMetric.id ? { ...m, targetVal: tempTargetVal } : m));
                       setEditingTargetMetric(null);
                     }}
-                    className="flex-1 py-2 text-xs font-semibold rounded-xl bg-pink-400 text-white hover:bg-pink-500 shadow-md shadow-pink-100"
+                    className="flex-1 py-2 text-xs font-semibold rounded-xl bg-pink-400 text-white font-bold shadow-md shadow-pink-100"
                   >
                     Save Target
                   </button>
@@ -750,120 +1777,178 @@
             </div>
           )}
 
-          {/* CREATE METRIC MODAL */}
-          {isAddingMetric && (
-            <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-stone-100 space-y-3">
-                <h3 className="font-bold text-stone-800 text-sm">Add New Trackable Metric</h3>
-                
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-2">
-                    <label className="text-[10px] font-bold text-stone-400">Name</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g., Water Intake" 
-                      value={newMetricData.name} 
-                      onChange={e => setNewMetricData({ ...newMetricData, name: e.target.value })}
-                      className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-stone-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-stone-400">Emoji</label>
-                    <input 
-                      type="text" 
-                      value={newMetricData.emoji} 
-                      onChange={e => setNewMetricData({ ...newMetricData, emoji: e.target.value })}
-                      className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-stone-200 text-center"
-                    />
-                  </div>
+          {editingBoundsMetric && (
+            <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+              <div className="bg-white dark:bg-midnight-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-stone-200 dark:border-midnight-700 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-stone-800 dark:text-white text-sm">
+                    Configure {editingBoundsMetric.emoji} {editingBoundsMetric.name}
+                  </h3>
+                  <button onClick={() => setEditingBoundsMetric(null)} className="text-stone-400">✕</button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="text-[10px] font-bold text-stone-400">Unit</label>
+                    <label className="text-[10px] font-bold text-stone-400">Min</label>
                     <input 
-                      type="text" 
-                      placeholder="e.g., cups, mins" 
-                      value={newMetricData.unit} 
-                      onChange={e => setNewMetricData({ ...newMetricData, unit: e.target.value })}
-                      className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-stone-200"
+                      type="number" 
+                      value={editingBoundsMetric.min}
+                      onChange={(e) => setEditingBoundsMetric({ ...editingBoundsMetric, min: Number(e.target.value) })}
+                      className="w-full px-2 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-stone-400">Target Criteria</label>
-                    <div className="flex gap-1">
-                      <select 
-                        value={newMetricData.targetOp}
-                        onChange={e => setNewMetricData({ ...newMetricData, targetOp: e.target.value })}
-                        className="px-1 py-1.5 text-xs rounded-xl border border-stone-200 bg-stone-50"
-                      >
-                        <option value=">">&gt;</option>
-                        <option value="<">&lt;</option>
-                      </select>
-                      <input 
-                        type="number" 
-                        value={newMetricData.targetVal} 
-                        onChange={e => setNewMetricData({ ...newMetricData, targetVal: Number(e.target.value) })}
-                        className="w-full px-2 py-1.5 text-xs rounded-xl border border-stone-200"
-                      />
-                    </div>
+                    <label className="text-[10px] font-bold text-stone-400">Max</label>
+                    <input 
+                      type="number" 
+                      value={editingBoundsMetric.max}
+                      onChange={(e) => setEditingBoundsMetric({ ...editingBoundsMetric, max: Number(e.target.value) })}
+                      className="w-full px-2 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-stone-400">Step</label>
+                    <input 
+                      type="number" 
+                      value={editingBoundsMetric.step}
+                      onChange={(e) => setEditingBoundsMetric({ ...editingBoundsMetric, step: Number(e.target.value) })}
+                      className="w-full px-2 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
+                    />
                   </div>
                 </div>
 
                 <div className="flex gap-2 pt-2">
                   <button 
-                    onClick={() => setIsAddingMetric(false)}
-                    className="flex-1 py-2 text-xs font-semibold rounded-xl bg-stone-100 text-stone-600"
+                    onClick={() => {
+                      if (metrics.length <= 1) {
+                        alert("Must keep at least 1 metric!");
+                        return;
+                      }
+                      setMetrics(prev => prev.filter(m => m.id !== editingBoundsMetric.id));
+                      setEditingBoundsMetric(null);
+                    }}
+                    className="px-3 py-2 text-rose-500 bg-rose-50 dark:bg-rose-950/40 rounded-xl text-xs font-bold hover:bg-rose-100"
                   >
-                    Cancel
+                    Delete Metric
                   </button>
                   <button 
                     onClick={() => {
-                      if (!newMetricData.name) return;
-                      const id = newMetricData.name.toLowerCase().replace(/\s+/g, '');
-                      setMetrics([...metrics, { ...newMetricData, id, min: 0, max: 10, step: 1, color: '#818CF8', bg: '#EEF2FF' }]);
-                      setIsAddingMetric(false);
+                      setMetrics(prev => prev.map(m => m.id === editingBoundsMetric.id ? editingBoundsMetric : m));
+                      setEditingBoundsMetric(null);
                     }}
-                    className="flex-1 py-2 text-xs font-semibold rounded-xl bg-pink-400 text-white font-bold"
+                    className="flex-1 py-2 bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-xs"
                   >
-                    Create
+                    Save Bounds
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Bottom Navigation Dock */}
-          <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-white/90 backdrop-blur-md px-3 py-2 rounded-full border border-stone-200/80 shadow-lg flex justify-around items-center z-40">
+          {editingEntry && (
+            <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+              <div className="bg-white dark:bg-midnight-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-stone-200 dark:border-midnight-700 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-stone-800 dark:text-white text-sm">
+                    Edit {editingEntry.date} ({editingEntry.dayName})
+                  </h3>
+                  <button onClick={() => setEditingEntry(null)} className="text-stone-400">✕</button>
+                </div>
+
+                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+                  {metrics.map(m => (
+                    <div key={m.id} className="flex justify-between items-center text-xs bg-stone-50 dark:bg-midnight-900 p-2 rounded-xl">
+                      <span className="text-stone-700 dark:text-stone-200">{m.emoji} {m.name}</span>
+                      <input 
+                        type="number" 
+                        value={editingEntry[m.id] ?? 0}
+                        onChange={(e) => setEditingEntry({ ...editingEntry, [m.id]: Number(e.target.value) })}
+                        className="w-20 px-2 py-1 text-xs text-right rounded-lg border border-stone-200 dark:border-midnight-700 bg-white dark:bg-midnight-800 text-stone-800 dark:text-white font-bold"
+                      />
+                    </div>
+                  ))}
+                  <div>
+                    <label className="text-[10px] text-stone-400 font-bold block mb-1">Notes</label>
+                    <input 
+                      type="text" 
+                      value={editingEntry.note || ''}
+                      onChange={(e) => setEditingEntry({ ...editingEntry, note: e.target.value })}
+                      className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-midnight-700 bg-stone-50 dark:bg-midnight-950 text-stone-800 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setEntries(prev => prev.map(e => e.id === editingEntry.id ? editingEntry : e));
+                    setEditingEntry(null);
+                  }}
+                  className="w-full py-2.5 bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-xs"
+                >
+                  Update Entry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {}
+          <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-white/90 dark:bg-midnight-900/90 backdrop-blur-md px-3 py-2 rounded-full border border-stone-200/80 dark:border-midnight-800 shadow-lg flex justify-around items-center z-40 transition-colors">
             <button 
               onClick={() => setActiveTab('dashboard')}
-              className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition ${activeTab === 'dashboard' ? 'text-pink-500 scale-105' : 'text-stone-400'}`}
+              className={`flex flex-col items-center gap-0.5 text-[9px] font-semibold transition ${
+                activeTab === 'dashboard' ? 'text-pink-500 scale-105' : 'text-stone-400'
+              }`}
             >
-              <Icon name="pulse" className="w-5 h-5" />
+              <Icon name="pulse" className="w-4 h-4" />
               <span>Trends</span>
             </button>
             <button 
-              onClick={() => setActiveTab('regression')}
-              className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition ${activeTab === 'regression' ? 'text-indigo-500 scale-105' : 'text-stone-400'}`}
+              onClick={() => setActiveTab('statsLab')}
+              className={`flex flex-col items-center gap-0.5 text-[9px] font-semibold transition ${
+                activeTab === 'statsLab' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-stone-400'
+              }`}
             >
-              <Icon name="calculator" className="w-5 h-5" />
+              <Icon name="graduation" className="w-4 h-4" />
+              <span>AP Stats</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('regression')}
+              className={`flex flex-col items-center gap-0.5 text-[9px] font-semibold transition ${
+                activeTab === 'regression' ? 'text-indigo-500 scale-105' : 'text-stone-400'
+              }`}
+            >
+              <Icon name="calculator" className="w-4 h-4" />
               <span>Regression</span>
             </button>
             <button 
               onClick={() => setActiveTab('log')}
-              className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition ${activeTab === 'log' ? 'text-rose-500 scale-105' : 'text-stone-400'}`}
+              className={`flex flex-col items-center gap-0.5 text-[9px] font-semibold transition ${
+                activeTab === 'log' ? 'text-rose-500 scale-105' : 'text-stone-400'
+              }`}
             >
-              <Icon name="plus" className="w-5 h-5" />
+              <Icon name="plus" className="w-4 h-4" />
               <span>Log Day</span>
             </button>
             <button 
-              onClick={() => setActiveTab('history')}
-              className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition ${activeTab === 'history' ? 'text-amber-500 scale-105' : 'text-stone-400'}`}
+              onClick={() => setActiveTab('todos')}
+              className={`flex flex-col items-center gap-0.5 text-[9px] font-semibold transition ${
+                activeTab === 'todos' ? 'text-teal-500 scale-105' : 'text-stone-400'
+              }`}
             >
-              <Icon name="calendar" className="w-5 h-5" />
+              <Icon name="checkSquare" className="w-4 h-4" />
+              <span>To-Do</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('history')}
+              className={`flex flex-col items-center gap-0.5 text-[9px] font-semibold transition ${
+                activeTab === 'history' ? 'text-amber-500 scale-105' : 'text-stone-400'
+              }`}
+            >
+              <Icon name="history" className="w-4 h-4" />
               <span>History</span>
             </button>
           </nav>
+
         </div>
       );
     }
